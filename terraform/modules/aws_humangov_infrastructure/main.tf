@@ -53,11 +53,16 @@ resource "random_string" "bucket_suffix" {
   upper = false  
 }
 
-resource "aws_s3_bucket" "state_s3" {  
-  bucket = "humangov-${var.state_name}-s3-${random_string.bucket_suffix.result}"  
-  acl    = "private"  
-  
-  tags = {  
-    Name = "humangov-${var.state_name}"  
-  }  
+resource "aws_s3_bucket_acl" "state_s3_acl" {
+  bucket = aws_s3_bucket.state_s3.id
+
+  acl = "private"
+}
+
+resource "aws_s3_bucket" "state_s3" {
+  bucket = "humangov-${var.state_name}-s3-${random_string.bucket_suffix.result}"
+
+  tags = {
+    Name = "humangov-${var.state_name}"
+  }
 }
