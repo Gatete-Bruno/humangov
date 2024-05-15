@@ -1,0 +1,15 @@
+---
+# handlers file for roles/humangov_webapp
+
+
+---  
+- name: Restart Nginx  
+  systemd:  
+    name: nginx  
+    state: restarted  
+  become: yes  
+- name: Restart humangov  
+  systemd:  
+    name: humangov  
+    state: restarted  
+  become: yes
