@@ -35,18 +35,30 @@ resource "aws_security_group" "state_ec2_sg" {
   }
 }
 
-
-resource "aws_instance" "state_ec2" {
-  ami           = "ami-007855ac798b5175e"
-  instance_type = "t2.micro"
-  key_name      = "humangov-ec2-key"
-  vpc_security_group_ids = [aws_security_group.state_ec2_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.s3_dynamodb_full_access_instance_profile.name
-
-  tags = {
-    Name = "humangov-${var.state_name}"
-  }
+resource "aws_instance" "state_ec2" {  
+    ami = "ami-007855ac798b5175e"  
+    instance_type = "t2.micro"  
+    key_name = "humangov-ec2-key"  
+    vpc_security_group_ids = [aws_security_group.state_ec2_sg.id]  
+    iam_instance_profile = aws_iam_instance_profile.s3_dynamodb_full_access_instance_profile.name  
+    
+    # Append EC2 instance information to the /etc/ansible/hosts file, enabling Ansible to manage the instance.  
+   provisioner "local-exec" {
+       command = "sudo sh -c 'echo ${var.state_name} id=${self.id} ansible_host=${self.private_ip} ansible_user=ubuntu us_state=${var.state_name} aws_region=${var.region} aws_s3_bucket=${aws_s3_bucket.state_s3.bucket} aws_dynamodb_table=${aws_dynamodb_table.state_dynamodb.name} >> /etc/ansible/hosts'"
 }
+
+    # Remove the information about the EC2 instance from the /etc/ansible/hosts file when the instance is destroyed.  
+    provisioner "local-exec" {  
+        when = destroy
+        command = "sed -i '/${self.id}/d' /etc/ansible/hosts"  
+    }  
+      
+    tags = {  
+        Name = "humangov-${var.state_name}"  
+    }  
+}
+
+  
 
 resource "aws_dynamodb_table" "state_dynamodb" {
   name         = "humangov-${var.state_name}-dynamodb"
