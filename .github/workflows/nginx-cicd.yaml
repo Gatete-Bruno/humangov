@@ -1,0 +1,54 @@
+name: CI/CD Pipeline for NGINX
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log into Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD_SYMBOLS_ALLOWED }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Set up Docker build context
+        run: |
+          mkdir -p docker-context
+          cp python-app/src/nginx/nginx.conf docker-context/
+          cp python-app/src/nginx/proxy_params docker-context/
+
+      - name: Remove default NGINX configuration
+        run: |
+          echo 'FROM nginx:alpine' > docker-context/Dockerfile
+          echo 'RUN rm /etc/nginx/conf.d/default.conf' >> docker-context/Dockerfile
+
+      - name: Copy custom configuration file
+        run: |
+          echo 'COPY nginx.conf /etc/nginx/conf.d' >> docker-context/Dockerfile
+
+      - name: Copy proxy parameters
+        run: |
+          echo 'COPY proxy_params /etc/nginx/proxy_params' >> docker-context/Dockerfile
+
+      - name: Expose port 80
+        run: |
+          echo 'EXPOSE 80' >> docker-context/Dockerfile
+
+      - name: Start NGINX
+        run: |
+          echo 'CMD ["nginx", "-g", "daemon off;"]' >> docker-context/Dockerfile
+
+      - name: Build NGINX Docker image
+        run: docker build -t bruno74t/nginx-humangov:latest docker-context
+
+      - name: Push NGINX Docker image to Docker Hub
+        run: docker push bruno74t/nginx-humangov:latest
+
+      - name: Deploy NGINX Docker container
+        run: docker run -d -p 80:80 bruno74t/nginx-humangov:latest
