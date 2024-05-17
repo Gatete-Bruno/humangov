@@ -46,8 +46,9 @@ jobs:
         run: |
           pip install pytest
           pytest
-          
-        - name: Build Docker image
+
+      - name: Build Docker image
+        working-directory: python-app/src
         run: docker build -t bruno74t/humangov-image:latest .
 
       - name: Run Docker container
