@@ -46,7 +46,18 @@ jobs:
         run: |
           pip install pytest
           pytest
+          
+        - name: Build Docker image
+        run: docker build -t bruno74t/humangov-image:latest .
 
-      - name: Build Docker image
-        working-directory: python-app/src
-        run: docker build -t bruno74t/humangov-image:
+      - name: Run Docker container
+        run: docker run -d -p 8000:8000 bruno74t/humangov-image:latest
+
+      - name: Log into Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Backend Docker Image
+        run: docker push bruno74t/humangov-image:latest
