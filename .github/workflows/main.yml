@@ -47,15 +47,15 @@ jobs:
       #    pip install pytest
       #    pytest
 
+      - name: Log into Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
       - name: Build Docker image
         working-directory: python-app/src
         run: docker build -t bruno74t/humangov-image:latest .
 
-      - name: Run Docker container
-        run: docker run -d -p 8000:8000 bruno74t/humangov-image:latest
-
-      - name: Log into Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
       - name: Push Backend Docker Image
         run: docker push bruno74t/humangov-image:latest
+
+      - name: Run Docker container
+        run: docker run -d -p 8000:8000 bruno74t/humangov-image:latest
