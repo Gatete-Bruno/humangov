@@ -41,14 +41,15 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         continue-on-error: true
 
+      # Commented out as you might not have tests yet
       #- name: Test with pytest
       #  working-directory: python-app/src
       #  run: |
       #    pip install pytest
       #    pytest
 
-      - name: Log into Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Log into Docker Hub (using secrets)
+        run: docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD_SYMBOLS_ALLOWED }}
 
       - name: Build Docker image
         working-directory: python-app/src
@@ -57,5 +58,5 @@ jobs:
       - name: Push Backend Docker Image
         run: docker push bruno74t/humangov-image:latest
 
-      - name: Run Docker container
+      - name: Run Docker container (optional)
         run: docker run -d -p 8000:8000 bruno74t/humangov-image:latest
